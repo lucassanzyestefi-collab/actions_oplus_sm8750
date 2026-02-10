@@ -33,7 +33,7 @@ on:
           - "Off"
         default: "Off"
       adios:
-        description: '⚡ ADIOS IO scheduler support (to improve IO read/write performance)'
+        description: '🔧 ADIOS IO scheduler support (to improve IO read/write performance)'
         required: true
         type: choice
         options:
