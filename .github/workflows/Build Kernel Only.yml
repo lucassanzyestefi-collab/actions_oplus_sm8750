@@ -464,13 +464,9 @@ jobs:
           find "$GITHUB_WORKSPACE/zram" -name "zram.ko" -exec cp "./kernel_workspace/kernel_platform/common/out/drivers/block/zram/zram.ko" {} \;
           rm -rf $GITHUB_WORKSPACE/zram.zip
           
-          echo "📦 正在重新打包 zip…"
-          cd "$GITHUB_WORKSPACE/zram"
-          zip -qr "../zram.zip" .
-          
           echo "✅ 完成！"
       - name: 📤 Upload zram.zip | 上传 zram.zip
         uses: actions/upload-artifact@v4
         with:
-          name: zram-module.zip
-          path: ./zram.zip
+          name: zram-module
+          path: ./zram/*
