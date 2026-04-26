@@ -101,7 +101,7 @@ on:
         description: 'Enable WireGuard VPN support'
         required: true
         type: boolean
-        default: false
+        default: true
       netfilter_full:
         description: 'Full Netfilter (conntrack, NAT, hashlimit)'
         required: true
@@ -172,7 +172,7 @@ jobs:
           sudo apt purge man-db &&
           sudo rm -rf /var/lib/man-db/auto-update &&
           sudo apt update &&
-          sudo apt-get install -y --no-install-recommends binutils python-is-python3 libssl-dev libelf-dev ccache aria2 dos2unix &
+          sudo apt-get install -y --no-install-recommends binutils python-is-python3 libssl-dev libelf-dev ccache aria2 dos2unix
 
           echo "Cloning source repository..."
           curl -L https://github.com/palazik/OnePlus_Kernel_Backport/archive/refs/heads/6.6.127_oneplus13_coloros16.0.5.zip -o common.zip && 
@@ -189,7 +189,10 @@ jobs:
           echo "Fetching CodeLinaro/Qualcomm Build Tools..."
           git clone --depth=1 -b ks-kernel.lnx.4.0.r1-rel https://git.codelinaro.org/clo/la/kernel/prebuilts/build-tools.git build-tools &
 
+          wait
+
           echo "Source and tools initialized successfully!"
+          
           echo "Removing ABI protection & dirty suffix..."
           rm common/android/abi_gki_protected_exports_* || true
           for f in common/scripts/setlocalversion; do
