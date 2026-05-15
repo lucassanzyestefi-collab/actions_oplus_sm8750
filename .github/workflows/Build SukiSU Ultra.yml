@@ -9,7 +9,7 @@ env:
   ANDROID_VERSION: 'android15'
   KERNEL_VERSION: '6.6'
   KERNEL_NAME: 'android15-8-g29d86c5fc9dd-abogki428889875-4k'
-  CCACHE_KEY: ccache-neov4-6.6.127
+  CCACHE_KEY: ccache-neov4-6.6.138
 
 on:
   workflow_dispatch:
@@ -191,10 +191,10 @@ jobs:
 
           # Source clone
           echo "Cloning source repository..."
-          curl -L https://github.com/palazik/OnePlus_Kernel_Backport/archive/refs/heads/6.6.127_oneplus13_coloros16.0.5.zip \
+          curl -L https://github.com/palazik/android_kernel_common_oneplus_sm8750/archive/refs/heads/6.6.138_oneplus13_coloros16.zip \
             -o common.zip &&
           unzip -q common.zip &&
-          mv OnePlus_Kernel_Backport-* common &&
+          mv android_kernel_common_oneplus_sm8750-* common &&
           rm -f common.zip &
 
           # Clang — only download if cache missed
@@ -266,7 +266,7 @@ jobs:
 
       - name: Configure CCache Directory
         run: |
-          echo "CCACHE_DIR=$HOME/.ccache_6.6.127" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$HOME/.ccache_6.6.138" >> $GITHUB_ENV
           echo "LDCACHE_DIR=/dev/shm/ldcache_6.6.127" >> $GITHUB_ENV
           mkdir -p /dev/shm/ldcache_6.6.127
           echo "CCACHE_MAXSIZE=10G" >> $GITHUB_ENV
@@ -1027,8 +1027,8 @@ jobs:
           if [[ "${{ github.event.inputs.lz4kd_enable }}" == "true" ]]; then
             wget https://raw.githubusercontent.com/$GITHUB_REPOSITORY/refs/heads/$GITHUB_REF_NAME/zram.zip || true
           fi
-          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.127_palaziks-ShiftPorts.zip
-          FULL_VERSION=6.6.127-palaziks-ShiftPorts
+          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.138_palaziks-ShiftPorts.zip
+          FULL_VERSION=6.6.138-palaziks-ShiftPorts
           zip -r ../$AK3_NAME ./*
           echo "ak3name=$AK3_NAME" >> $GITHUB_OUTPUT
           
@@ -1096,7 +1096,7 @@ jobs:
           RUN_URL="$REPO_URL/actions/runs/${{ github.run_id }}"
           TIME_NOW="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
 
-          export TG_KERNEL_VERSION="6.6.127"
+          export TG_KERNEL_VERSION="6.6.138"
           export TG_KSU_DISPLAY="SukiSU Ultra"
           export TG_KSUVER="${{ env.KSUVER }}"
           export TG_SUFFIX="palaziks-ShiftPorts"
@@ -1227,7 +1227,7 @@ jobs:
 
           CAPTION="✅ <b>Kernel Build Successful!</b>
 
-          📱 <b>Device:</b> <code>OnePlus 13</code>
+          📱 <b>Device:</b> <code>OnePlus 13, 6.6.138</code>
           ⚡ <b>KSU:</b> <code>SukiSU Ultra</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
@@ -1251,7 +1251,7 @@ jobs:
           REPO_URL="https://github.com/${{ github.repository }}"
           CAPTION="❌ <b>Kernel Build Failed!</b>
 
-          📱 <b>Device:</b> <code>OnePlus 13</code>
+          📱 <b>Device:</b> <code>OnePlus 13, 6.6.138</code>
           ⚡ <b>KSU:</b> <code>SukiSU Ultra</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
