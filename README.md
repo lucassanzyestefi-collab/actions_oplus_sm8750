@@ -3,7 +3,7 @@
     <summary>
       <h1 align="center" style="margin: 0; padding: 0;">⋆ palaziks OnePlus Kernel ⋆</h1>
       <p align="center" style="font-size:12px; margin-top: 5px; margin-bottom: 20px;">
-        <i>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750) with SukiSU Ultra</i>
+        <i>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750) with KernelSU Next</i>
       </p>
     </summary>
   </ul>
@@ -22,7 +22,7 @@
 
 | Property | Value |
 |----------|-------|
-| **Version** | `6.6.138` (upstreamed from 6.6.89) |
+| **Version** | `6.6.139` (upstreamed from 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Kernel Version** | `Linux 6.6` (GKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
@@ -134,14 +134,14 @@
 ### Quick Start
 1. **Fork** this repository (ensure all branches are copied)
 2. Go to **Actions** → Enable workflows
-3. Click **"SukiSU Ultra OP13 Build"** → **"Run workflow"**
+3. Click **"KernelSU Next OP13 Build"** → **"Run workflow"**
 4. Configure options:
    - ✅ SuSFS (recommended for hiding)
    - ✅ Fengchi (performance scheduler)
    - ✅ Memory Opt Patches (25 optimizations)
    - 🔘 LTO Type: `thin` (balanced) / `none` (fastest compile) / `full` (max optimization)
    - 🔘 Optional features: KPM, LZ4KD, NTSync, IPv6 NAT, etc.
-5. Click **"Run workflow"** → Wait ~4-5 minutes
+5. Click **"Run workflow"** → Wait ~5-6 minutes
 6. Download `AnyKernel3_*.zip` from artifacts or Telegram
 
 ### Workflow Optimizations
