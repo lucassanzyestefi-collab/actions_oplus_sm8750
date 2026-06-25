@@ -6,7 +6,7 @@
         <small>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750)</small>
       </p>
       <p align="center" style="font-size:12px; margin-top: 0; margin-bottom: 20px;">
-        <i>SukiSU Ultra &amp; ReSukiSU &amp; KernelSU &amp; KernelSU Next</i>
+        <i>SukiSU Ultra &amp; KageSU &amp; ReSukiSU &amp; KernelSU &amp; KernelSU Next</i>
       </p>
     </summary>
   </ul>
