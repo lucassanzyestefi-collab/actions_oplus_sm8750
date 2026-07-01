@@ -38,11 +38,6 @@ on:
           - 'false'
           - 'true'
           - 'default'
-      bbrv3_enable:
-        description: 'Enable BBRv3 TCP Congestion Control (backported by WildKernels / FatalCoder524)'
-        required: true
-        type: boolean
-        default: true
       adios_enable:
         description: 'Enable ADIOS IO Scheduler (Improves IO read/write performance)'
         required: true
@@ -818,7 +813,6 @@ jobs:
 
       # ── BBRv3 (FatalCoder524 method — patch from WildKernels/kernel_patches) ──
       - name: Apply BBRv3
-        if: inputs.bbrv3_enable
         working-directory: kernel_workspace/common
         run: |
           echo "::group::Apply BBRv3 patches"
@@ -976,7 +970,7 @@ jobs:
           echo "LZ4: ${{ github.event.inputs.lz4_enable }}" >> ./ak3.log
           echo "LZ4KD: ${{ github.event.inputs.lz4kd_enable }}" >> ./ak3.log
           echo "BBR&Brutal: ${{ github.event.inputs.bbr_enable }}" >> ./ak3.log
-          echo "BBRv3: ${{ github.event.inputs.bbrv3_enable }}" >> ./ak3.log
+          echo "BBRv3: true (stock)" >> ./ak3.log
           echo "ADIOS: ${{ github.event.inputs.adios_enable }}" >> ./ak3.log
           echo "Re-Kernel: ${{ github.event.inputs.rekernel_enable }}" >> ./ak3.log
           echo "BBG: ${{ github.event.inputs.baseband_guard }}" >> ./ak3.log
@@ -1037,7 +1031,7 @@ jobs:
           export TG_REPO="${{ github.repository }}"
           export TG_SUSFS="${{ github.event.inputs.SUSFS }}"
           export TG_BBR="${{ github.event.inputs.bbr_enable }}"
-          export TG_BBR3="${{ github.event.inputs.bbrv3_enable }}"
+          export TG_BBR3="true"
           export TG_ADIOS="${{ github.event.inputs.adios_enable }}"
           export TG_BBG="${{ github.event.inputs.baseband_guard }}"
           export TG_LZ4="${{ github.event.inputs.lz4_enable }}"
@@ -1251,7 +1245,7 @@ jobs:
           - **ZRAM Writeback:** ${{ github.event.inputs.zram_writeback }}
           - **SchedUil Optimizations:** ${{ github.event.inputs.schedutil_opt }}
           - **BBR/Brutal:** ${{ github.event.inputs.bbr_enable }}
-          - **BBRv3:** ${{ github.event.inputs.bbrv3_enable }}
+          - **BBRv3:** true (stock)
           - **ADIOS IO:** ${{ github.event.inputs.adios_enable }}
           - **Baseband Guard:** ${{ github.event.inputs.baseband_guard }}
           - **Fengchi:** ${{ github.event.inputs.fengchi }}
