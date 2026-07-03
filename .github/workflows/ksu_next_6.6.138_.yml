@@ -1,3 +1,5 @@
+Here is the updated version of your first workflow (ksu_next_6.6.138_.yml.txt). I have integrated all the components for the BORE patch from the second workflow, which includes adding the input toggle, the patch step itself, and the logging/notification updates for AnyKernel3, Telegram, and GitHub Releases.
+```yaml
 name: KernelSU Next OP13 Build
 
 concurrency:
@@ -67,6 +69,11 @@ on:
         required: true
         type: boolean
         default: true
+      bore_enable:
+        description: 'Enable BORE Scheduler (Burst-Oriented Response Enhancer, off by default)'
+        required: true
+        type: boolean
+        default: false
       unicode_fix:
         description: 'Enable Unicode Bypass Fix (path traversal protection)'
         required: true
@@ -411,7 +418,6 @@ jobs:
           echo "CONFIG_EXT4_FS=y"        >> "$DEFCONFIG"   # KSU depends on EXT4_FS
           # Inline/manual hooks are supplied by the SUSFS fs/*.c patch +
           # WildKernels overwrite_hook_mode.patch — no Kconfig toggle needed.
-      
           echo "CONFIG_TMPFS_XATTR=y"      >> "$DEFCONFIG"
           echo "CONFIG_TMPFS_POSIX_ACL=y"  >> "$DEFCONFIG"
       
@@ -546,6 +552,16 @@ jobs:
           wget -qO /tmp/ub_fix.patch "$PATCH_URL" 2>/dev/null && \
             patch -p1 --forward < /tmp/ub_fix.patch || true
           echo "Unicode fix applied"
+
+      - name: Apply BORE Scheduler
+        if: inputs.bore_enable
+        working-directory: kernel_workspace/common
+        run: |
+          echo "CONFIG_SCHED_BORE=y" >> arch/arm64/configs/gki_defconfig
+          BORE_URL="https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/patches/bore.patch"
+          wget -qO /tmp/bore.patch "$BORE_URL"
+          patch -p1 -F 3 < /tmp/bore.patch
+          echo "✅ BORE scheduler applied"
 
       # ── NEW: Memory & Scheduler Optimization Patches (WildKernels) ───────────
       - name: Apply Memory & Scheduler Optimization Patches
@@ -993,6 +1009,7 @@ jobs:
           echo "IP_SET+IPv6NAT: ${{ github.event.inputs.ip_set_enable }}" >> ./ak3.log
           echo "TTL: ${{ github.event.inputs.ttl_enable }}" >> ./ak3.log
           echo "MemOpt: ${{ github.event.inputs.mem_opt_patches }}" >> ./ak3.log
+          echo "BORE: ${{ github.event.inputs.bore_enable }}" >> ./ak3.log
           zip -z ../$AK3_NAME < ./ak3.log
 
       - name: 📤 Upload AnyKernel3
@@ -1013,7 +1030,6 @@ jobs:
           find zram -name "zram.ko" -exec cp "$ZRAM_KO" {} \;
           rm -f zram.zip
           echo "✅ Done!"
-
       - name: 📤 Upload zram.zip
         uses: actions/upload-artifact@v4
         with:
@@ -1054,6 +1070,7 @@ jobs:
           export TG_FENGCHI="${{ github.event.inputs.fengchi }}"
           export TG_HMBIRD="false"
           export TG_UFIX="${{ github.event.inputs.unicode_fix }}"
+          export TG_BORE="${{ github.event.inputs.bore_enable }}"
           export TG_ZWB="${{ github.event.inputs.zram_writeback }}"
           export TG_SCHED="${{ github.event.inputs.schedutil_opt }}"
           export TG_CLANG="ZyCromerZ-19"
@@ -1104,6 +1121,7 @@ jobs:
                   feat(e("TG_MM"),      "Multi-Manager Support"),
                   feat(e("TG_FENGCHI"),"Fengchi Optimization"),
                   feat(e("TG_UFIX"),    "Unicode Bypass Fix"),
+                  feat(e("TG_BORE"),    "BORE Scheduler (EEVDF burst enhancer)"),
                   feat(e("TG_ZWB"),     "ZRAM Writeback"),
                   feat(e("TG_SCHED"),  "SchedUtil Optimizations"),
                   feat(e("TG_CPU_OPT"),"Oryon CPU Optimizations"),
@@ -1265,6 +1283,7 @@ jobs:
           - **Fengchi:** ${{ github.event.inputs.fengchi }}
           - **Oryon CPU Optimizations:** ${{ github.event.inputs.cpu_opt }}
           - **Unicode Fix:** ${{ github.event.inputs.unicode_fix }}
+          - **BORE Scheduler:** ${{ github.event.inputs.bore_enable }}
           - **WireGuard:** ${{ github.event.inputs.wireguard }}
           - **LRNG v59:** ${{ github.event.inputs.lrng_enable }}
           - **Wakelock Blocker:** ${{ github.event.inputs.wakelock_blocker }}
@@ -1275,3 +1294,5 @@ jobs:
             --title "${{ env.TAG_HEAD }}-${{ env.FULL_VERSION }}" \
             --notes-file release_notes.md \
             release_zips/AnyKernel3_*.zip
+
+```
