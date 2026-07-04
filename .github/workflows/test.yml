@@ -599,6 +599,19 @@ jobs:
           echo "CONFIG_SCHED_BORE=y" >> arch/arm64/configs/gki_defconfig
           BORE_URL="https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/patches/bore.patch"
           wget -qO /tmp/bore.patch "$BORE_URL"
+          
+          echo "Preparing kernel/sched/fair.c for BORE patch..."
+          # Dynamically detect if your bore patch expects 700000ULL or 750000ULL
+          if grep -q "700000ULL" /tmp/bore.patch; then
+            VAL="700000ULL"
+          else
+            VAL="750000ULL"
+          fi
+          
+          # Reformat the definitions in fair.c to match BORE's expected spacing and values
+          sed -i "s/unsigned int sysctl_sched_base_slice.*/unsigned int sysctl_sched_base_slice = $VAL;/" kernel/sched/fair.c
+          sed -i "s/static unsigned int normalized_sysctl_sched_base_slice.*/static unsigned int normalized_sysctl_sched_base_slice = $VAL;/" kernel/sched/fair.c
+          
           patch -p1 -F 3 < /tmp/bore.patch
           echo "✅ BORE scheduler applied"
 
