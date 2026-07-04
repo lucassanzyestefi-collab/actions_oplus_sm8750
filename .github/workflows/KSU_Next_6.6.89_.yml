@@ -1,4 +1,4 @@
-name: KernelSU Next OP13 Build
+name: KernelSU Next OP13 Build 6.6.89 cct18 
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-6.6.89
