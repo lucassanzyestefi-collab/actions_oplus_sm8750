@@ -872,8 +872,8 @@ index f22df2b..8ebe908 100644
   *   SCHED_TUNABLESCALING_LINEAR - scaled linear, *ncpus
   *
 - * (default SCHED_TUNABLESCALING_LOG = *(1+ilog(ncpus))
-+ * BORE : default SCHED_TUNABLESCALING_NONE = *1 constant
-+ * EEVDF: default SCHED_TUNABLESCALING_LOG  = *(1+ilog(ncpus))
+  * BORE : default SCHED_TUNABLESCALING_NONE = *1 constant
+  * EEVDF: default SCHED_TUNABLESCALING_LOG  = *(1+ilog(ncpus))
   */
 +#ifdef CONFIG_SCHED_BORE
 +unsigned int sysctl_sched_tunable_scaling = SCHED_TUNABLESCALING_NONE;
@@ -885,9 +885,9 @@ index f22df2b..8ebe908 100644
   * Minimal preemption granularity for CPU-bound tasks:
   *
 - * (default: 0.70 msec * (1 + ilog(ncpus)), units: nanoseconds)
-+ * BORE : base_slice = minimum multiple of nsecs_per_tick >= min_base_slice
-+ * (default min_base_slice = 2000000 constant, units: nanoseconds)
-+ * EEVDF: default 0.70 msec * (1 + ilog(ncpus)), units: nanoseconds
+  * BORE : base_slice = minimum multiple of nsecs_per_tick >= min_base_slice
+  * (default min_base_slice = 2000000 constant, units: nanoseconds)
+  * EEVDF: default 0.70 msec * (1 + ilog(ncpus)), units: nanoseconds
   */
 +#ifdef CONFIG_SCHED_BORE
 +static const unsigned int nsecs_per_tick       = 1000000000ULL / HZ;
