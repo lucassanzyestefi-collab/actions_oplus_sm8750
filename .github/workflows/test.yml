@@ -601,17 +601,21 @@ jobs:
           wget -qO /tmp/bore.patch "$BORE_URL"
           
           echo "Preparing kernel/sched/fair.c for BORE patch..."
-          # Dynamically detect if your bore patch expects 700000ULL or 750000ULL
+          # Determine the fallback value (usually 700000ULL or 750000ULL) in the patch
           if grep -q "700000ULL" /tmp/bore.patch; then
             VAL="700000ULL"
           else
             VAL="750000ULL"
           fi
           
-          # Reformat the definitions in fair.c to match BORE's expected spacing and values
-          sed -i "s/unsigned int sysctl_sched_base_slice.*/unsigned int sysctl_sched_base_slice = $VAL;/" kernel/sched/fair.c
-          sed -i "s/static unsigned int normalized_sysctl_sched_base_slice.*/static unsigned int normalized_sysctl_sched_base_slice = $VAL;/" kernel/sched/fair.c
+          # Wrap standard definitions in fair.c with the dummy CONFIG_CACHY block BORE expects
+          perl -0777 -i -pe "s/unsigned int sysctl_sched_base_slice\s*=\s*\d+ULL;\s*static unsigned int normalized_sysctl_sched_base_slice\s*=\s*\d+ULL;/#ifdef CONFIG_CACHY\nunsigned int sysctl_sched_base_slice = 350000ULL;\nstatic unsigned int normalized_sysctl_sched_base_slice = 350000ULL;\n#else\nunsigned int sysctl_sched_base_slice = \$VAL;\nstatic unsigned int normalized_sysctl_sched_base_slice = \$VAL;\n#endif \/* CONFIG_CACHY *\//g" kernel/sched/fair.c
           
+          # Fallback relaxed pattern in case of alternative spacing/tabs
+          if ! grep -q "CONFIG_CACHY" kernel/sched/fair.c; then
+            perl -0777 -i -pe "s/unsigned int sysctl_sched_base_slice\s*=\s*[^\n]+;\s*static unsigned int normalized_sysctl_sched_base_slice\s*=\s*[^\n]+;/#ifdef CONFIG_CACHY\nunsigned int sysctl_sched_base_slice = 350000ULL;\nstatic unsigned int normalized_sysctl_sched_base_slice = 350000ULL;\n#else\nunsigned int sysctl_sched_base_slice = \$VAL;\nstatic unsigned int normalized_sysctl_sched_base_slice = \$VAL;\n#endif \/* CONFIG_CACHY *\//g" kernel/sched/fair.c
+          fi
+
           patch -p1 -F 3 < /tmp/bore.patch
           echo "✅ BORE scheduler applied"
 
