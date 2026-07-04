@@ -555,42 +555,10 @@ jobs:
         working-directory: kernel_workspace/common
         run: |
           echo "CONFIG_SCHED_BORE=y" >> arch/arm64/configs/gki_defconfig
-          
-          # Try the local bore.patch first with a more lenient fuzz factor
-          echo "Attempting to apply local bore.patch with fuzz=5..."
           BORE_URL="https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/patches/bore.patch"
-          
-          if wget -qO /tmp/bore.patch "$BORE_URL" && patch -p1 -F 5 --dry-run < /tmp/bore.patch >/dev/null 2>&1; then
-            patch -p1 -F 5 < /tmp/bore.patch
-            echo "✅ Local BORE scheduler patch applied successfully!"
-          else
-            echo "⚠️ Local bore.patch failed to apply cleanly (likely due to line mismatches in 6.6.89)."
-            
-            # Fallback 1: Try CachyOS 6.6 BORE patch
-            echo "Trying CachyOS 6.6 BORE patch fallback..."
-            CACHY_BORE_URL="https://raw.githubusercontent.com/CachyOS/kernel-patches/master/6.6/sched/0001-bore-cachy.patch"
-            if wget -qO /tmp/bore.patch "$CACHY_BORE_URL" && patch -p1 -F 5 --dry-run < /tmp/bore.patch >/dev/null 2>&1; then
-              patch -p1 -F 5 < /tmp/bore.patch
-              echo "✅ CachyOS BORE scheduler patch applied successfully!"
-            else
-              echo "⚠️ CachyOS BORE patch failed."
-              
-              # Fallback 2: Try linux-tkg 6.6 BORE patch
-              echo "Trying linux-tkg 6.6 BORE patch fallback..."
-              TKG_BORE_URL="https://raw.githubusercontent.com/Frogging-Family/linux-tkg/master/linux-tkg-patches/6.6/0001-bore.patch"
-              if wget -qO /tmp/bore.patch "$TKG_BORE_URL" && patch -p1 -F 5 --dry-run < /tmp/bore.patch >/dev/null 2>&1; then
-                patch -p1 -F 5 < /tmp/bore.patch
-                echo "✅ linux-tkg BORE scheduler patch applied successfully!"
-              else
-                echo "❌ All BORE scheduler patches failed to apply."
-                echo "--------------------------------------------------------"
-                echo "This is likely due to conflicts with OPlus/Fengchi scheduler modifications in kernel/sched/fair.c."
-                echo "If 'fengchi' is enabled in your inputs, please disable it (set it to false) and try again, as Fengchi and BORE are incompatible."
-                echo "--------------------------------------------------------"
-                exit 1
-              fi
-            fi
-          fi
+          wget -qO /tmp/bore.patch "$BORE_URL"
+          patch -p1 -F 3 < /tmp/bore.patch
+          echo "✅ BORE scheduler applied"
 
       - name: Apply Memory & Scheduler Optimization Patches
         if: inputs.mem_opt_patches
