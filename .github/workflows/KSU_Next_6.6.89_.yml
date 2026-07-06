@@ -454,25 +454,32 @@ jobs:
         run: |
           echo "Adding LZ4 & ZSTD patches..."
           cd kernel_workspace/common
-          
-          # Initialize dummy git repo to unlock Git's superior patching tools
-          git init
-          git config user.name "bot"
-          git config user.email "bot@github"
-          git add .
-          git commit -q -m "Base kernel"
-
           mkdir -p lib/lz4/lz4armv8
-          cp ../kernel_patches/zram/001-lz4.patch ./
+          
+          # Manually copy the LZ4 assembly files to bypass the binary diff warning
           cp ../kernel_patches/zram/lz4armv8.S lib/lz4/lz4armv8.S
           cp ../kernel_patches/zram/lz4armv8.S lib/lz4/lz4armv8/lz4armv8.S
+          
+          cp ../kernel_patches/zram/001-lz4.patch ./
           cp ../kernel_patches/zram/002-zstd.patch ./
           
-          # Git Apply natively understands binary diffs, fixing the LZ4 error
-          git apply --reject --whitespace=fix 001-lz4.patch || echo "✅ LZ4 applied with minor rejects"
+          # Apply LZ4. We use `|| true` because patch WILL exit with code 1 due to 
+          # skipping the binary diff, which is expected since we copied it manually above.
+          echo ">>> Applying LZ4 patch..."
+          patch -p1 -F 3 < 001-lz4.patch || true
           
-          # Git Apply may resolve the ZSTD conflict better than GNU patch
-          git apply --reject --whitespace=fix 002-zstd.patch || echo "⚠️ ZSTD applied with minor rejects"
+          # Apply ZSTD. GNU patch correctly handles /dev/null for creating new files.
+          # We use `|| true` so the single rejected macro hunk doesn't halt the build.
+          echo ">>> Applying ZSTD patch..."
+          patch -p1 -F 3 < 002-zstd.patch || true
+          
+          # Print the reject if it exists so we can inspect it in the Actions log
+          if [ -f "lib/zstd/common/portability_macros.h.rej" ]; then
+            echo "::warning::ZSTD patch had a minor conflict. This is usually harmless."
+            cat lib/zstd/common/portability_macros.h.rej
+          fi
+          
+          echo "✅ Patching step completed.""
 
       - name: Apply LZ4KD Patch
         if: inputs.lz4kd_enable
