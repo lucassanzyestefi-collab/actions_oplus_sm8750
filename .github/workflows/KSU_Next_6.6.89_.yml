@@ -460,8 +460,10 @@ jobs:
           cp ../kernel_patches/zram/lz4armv8.S lib/lz4/lz4armv8/lz4armv8.S
           cp ../kernel_patches/zram/002-zstd.patch ./
           
-          # Fix: Use 'patch' instead of 'git apply' to bypass strict binary/whitespace checks
-          patch -p1 -F 3 < 001-lz4.patch || echo "LZ4 Patch failed or already applied"
+          # Use git apply for binary diffs, fallback to patch if it fails
+          git apply -3 --whitespace=fix 001-lz4.patch || patch -p1 -F 3 < 001-lz4.patch || echo "LZ4 Patch failed or already applied"
+          
+          # Note: ZSTD patch has a strict conflict in portability_macros.h and requires manual rebasing
           patch -p1 -F 3 < 002-zstd.patch || echo "ZSTD Patch failed or already applied"
 
       - name: Apply LZ4KD Patch
