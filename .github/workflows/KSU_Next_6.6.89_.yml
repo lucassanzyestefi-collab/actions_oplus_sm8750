@@ -463,13 +463,13 @@ jobs:
           cp ../kernel_patches/zram/001-lz4.patch ./
           cp ../kernel_patches/zram/002-zstd.patch ./
           
-          # Apply LZ4. We use `|| true` because patch WILL exit with code 1 due to 
+          # Apply LZ4. We use || true because patch WILL exit with code 1 due to 
           # skipping the binary diff, which is expected since we copied it manually above.
           echo ">>> Applying LZ4 patch..."
           patch -p1 -F 3 < 001-lz4.patch || true
           
           # Apply ZSTD. GNU patch correctly handles /dev/null for creating new files.
-          # We use `|| true` so the single rejected macro hunk doesn't halt the build.
+          # We use || true so the single rejected macro hunk doesn't halt the build.
           echo ">>> Applying ZSTD patch..."
           patch -p1 -F 3 < 002-zstd.patch || true
           
@@ -479,7 +479,7 @@ jobs:
             cat lib/zstd/common/portability_macros.h.rej
           fi
           
-          echo "✅ Patching step completed.""
+          echo "Patching step completed."
 
       - name: Apply LZ4KD Patch
         if: inputs.lz4kd_enable
