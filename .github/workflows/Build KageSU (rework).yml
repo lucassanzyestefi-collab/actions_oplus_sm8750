@@ -1,4 +1,4 @@
-name: SukiSU Ultra OP13 AOSP Build
+name: KageSU rework OP13 Build
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-6.6.139
@@ -170,8 +170,8 @@ jobs:
         id: clang-cache
         uses: actions/cache@v4
         with:
-          path: kernel_workspace/clang-r563880c
-          key: Linux-aosp-clang-clang-r563880c
+          path: kernel_workspace/zyc-clang
+          key: zyc-clang-19.0.0git-20240723
 
       - name: Cache build-tools
         id: buildtools-cache
@@ -190,7 +190,7 @@ jobs:
           (sudo nice -n 19 ionice -c 3 rm -rf /usr/share/dotnet_trash /usr/local/lib/android_trash /opt/ghc_trash /usr/lib/jvm_trash) &
 
           rm -rf kernel_workspace/common kernel_workspace/out 2>/dev/null || true
-          mkdir -p kernel_workspace/clang-r563880c kernel_workspace/build-tools
+          mkdir -p kernel_workspace/zyc-clang kernel_workspace/build-tools
           cd kernel_workspace
 
           # apt — stripped to bare minimum, no purge/man-db waste
@@ -207,13 +207,13 @@ jobs:
 
           # Clang — only download if cache missed
           if [ "${{ steps.clang-cache.outputs.cache-hit }}" != "true" ]; then
-            echo "Cache miss — downloading clang-r563880c..."
-            mkdir -p clang-r563880c
+            echo "Cache miss — downloading ZyCromerZ Clang 19..."
+            mkdir -p zyc-clang
             aria2c -x16 -s16 -k1M -j16 --retry-wait=5 --max-tries=10 \
-              -d /tmp -o clang-r563880c.tar.gz \
-              "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android16-qpr2-release/clang-r563880c.tar.gz"
-            tar -C clang-r563880c -zxf /tmp/clang-r563880c.tar.gz
-            rm -f /tmp/clang-r563880c.tar.gz
+              -d /tmp -o zyc-clang.tar.gz \
+              "https://github.com/ZyCromerZ/Clang/releases/download/19.0.0git-20240723-release/Clang-19.0.0git-20240723.tar.gz"
+            tar -C zyc-clang -zxf /tmp/zyc-clang.tar.gz
+            rm -f /tmp/zyc-clang.tar.gz
           else
             echo "Clang restored from cache, skipping download."
           fi &
@@ -344,17 +344,17 @@ jobs:
           echo "Updating atime to achieve cache eviction..."
           find "${{ env.CCACHE_DIR }}" -type f -exec touch -t $(date -d "1 day ago" +%Y%m%d%H%M) {} + || true
               
-      - name: ⚡ Setup SukiSU Ultra
+      - name: ⚡ Setup KageSU
         run: |
           cd kernel_workspace/common
-          echo "🛠️ Setting up SukiSU Ultra (builtin)..."
-          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/setup.sh" | bash -s builtin
+          echo "🛠️ Setting up KageSU (rework)..."
+          curl -LSs "https://raw.githubusercontent.com/KageKSU/KageSU/rework-miuix/kernel/setup.sh" | bash -s rework-miuix
           cd KernelSU
           KSU_VERSION_COUNT=$(git rev-list --count HEAD)
-          export KSUVER=$(expr $KSU_VERSION_COUNT + 37185)
+          export KSUVER=$(expr $KSU_VERSION_COUNT + 30700)
           echo "KSUVER=$KSUVER" >> $GITHUB_ENV
       
-          # Custom version name (@palaziks) — SukiSU builds KSU_VERSION_FULL in kernel/Makefile
+          # Custom version name (@palaziks) — KageSU builds KSU_VERSION_FULL in kernel/Makefile
           KSU_API_VERSION=$(grep -E "^KSU_VERSION[[:space:]]*=" "../Makefile" | cut -d'=' -f2 | tr -d '[:space:]')
           [ -z "$KSU_API_VERSION" ] && KSU_API_VERSION="12800"
           KSU_COMMIT_HASH=$(git rev-parse --short=8 HEAD)
@@ -365,7 +365,7 @@ jobs:
           cat >> "$KBUILD_FILE" <<EOF
           ccflags-y += -DKSU_VERSION_FULL=\"v${KSU_API_VERSION}-${KSU_COMMIT_HASH}@palaziks\"
           EOF
-          echo "✅ SukiSU $KSUVER (v${KSU_API_VERSION}-${KSU_COMMIT_HASH}@palaziks)"
+          echo "✅ KageSU $KSUVER (v${KSU_API_VERSION}-${KSU_COMMIT_HASH}@palaziks)"
 
       - name: 🔧 Setup Patches
         run: |
@@ -920,8 +920,8 @@ jobs:
         run: |
           WORKDIR="$(pwd)"
           export MAP="-fdebug-prefix-map=${GITHUB_WORKSPACE}=. -fmacro-prefix-map=${GITHUB_WORKSPACE}=. -ffile-prefix-map=${GITHUB_WORKSPACE}=."
-          export PATH="$WORKDIR/kernel_workspace/clang-r563880c/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
-          CLANG_DIR="$WORKDIR/kernel_workspace/clang-r563880c/bin"
+          export PATH="$WORKDIR/kernel_workspace/zyc-clang/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
+          CLANG_DIR="$WORKDIR/kernel_workspace/zyc-clang/bin"
           echo "Clang: $($CLANG_DIR/clang --version | head -n 1)"
           echo "LLD:   $($CLANG_DIR/ld.lld --version | head -n 1)"
           pahole --version 2>/dev/null || echo "Pahole: Not Installed"
@@ -1012,12 +1012,12 @@ jobs:
             echo "Kernel Image not found, build may have failed."
             exit 1
           fi
-          KSU_TYPENAME="SukiSU-Ultra"
+          KSU_TYPENAME="KageSU"
           if [[ "${{ github.event.inputs.lz4kd_enable }}" == "true" ]]; then
             wget https://raw.githubusercontent.com/$GITHUB_REPOSITORY/refs/heads/$GITHUB_REF_NAME/zram.zip || true
           fi
-          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.139_palaziks_AOSP-ShiftPorts.zip
-          FULL_VERSION=6.6.139-palaziks_AOSP-ShiftPorts
+          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.139_palaziks-ShiftPorts.zip
+          FULL_VERSION=6.6.139-palaziks-ShiftPorts
           zip -r ../$AK3_NAME ./*
           echo "ak3name=$AK3_NAME" >> $GITHUB_OUTPUT
           
@@ -1088,7 +1088,7 @@ jobs:
           TIME_NOW="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
 
           export TG_KERNEL_VERSION="6.6.139"
-          export TG_KSU_DISPLAY="SukiSU Ultra"
+          export TG_KSU_DISPLAY="KageSU"
           export TG_KSUVER="${{ env.KSUVER }}"
           export TG_SUFFIX="palaziks-ShiftPorts"
           export TG_LTO="${{ github.event.inputs.lto_type }}"
@@ -1111,7 +1111,7 @@ jobs:
           export TG_BORE="${{ github.event.inputs.bore_enable }}"
           export TG_ZWB="${{ github.event.inputs.zram_writeback }}"
           export TG_SCHED="${{ github.event.inputs.schedutil_opt }}"
-          export TG_CLANG="clang-r563880c"
+          export TG_CLANG="ZyCromerZ-19"
           export TG_CPU_OPT="${{ github.event.inputs.cpu_opt }}"
           export TG_F2FS="${{ github.event.inputs.f2fs_opt }}"
           export TG_WG="${{ github.event.inputs.wireguard }}"
@@ -1176,7 +1176,7 @@ jobs:
               ]},
               {"tag": "hr"},
               {"tag": "h4", "children": ["🎯 ROM Compatibility"]},
-              {"tag": "p", "children": ["⚠️ Built with AOSP Clang for AOSP-based ROMs ONLY. To flash on ColorOS / OxygenOS, build the matching normal (non-AOSP) workflow yourself — ZyCromerZ Clang builds are for ColorOS / OxygenOS only."]},
+              {"tag": "p", "children": ["⚠️ Built with ZyCromerZ Clang for ColorOS / OxygenOS ONLY. To flash on an AOSP-based ROM, build the matching \"... AOSP\" workflow yourself — AOSP Clang builds are for AOSP ROMs only."]},
               {"tag": "hr"},
               {"tag": "h4", "children": ["📥 Installation"]},
               {"tag": "ol", "children": [
@@ -1226,7 +1226,7 @@ jobs:
           CAPTION="✅ <b>Kernel Build Successful!</b>
 
           📱 <b>Device:</b> <code>OnePlus 13</code>
-          ⚡ <b>KSU:</b> <code>SukiSU Ultra</code>
+          ⚡ <b>KSU:</b> <code>KageSU</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
           🔢 <b>Hash:</b> <a href=\"$REPO_URL/commit/${{ github.sha }}\">$COMMIT_HASH</a>
@@ -1250,7 +1250,7 @@ jobs:
           CAPTION="❌ <b>Kernel Build Failed!</b>
 
           📱 <b>Device:</b> <code>OnePlus 13</code>
-          ⚡ <b>KSU:</b> <code>SukiSU Ultra</code>
+          ⚡ <b>KSU:</b> <code>KageSU</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
           🔢 <b>Hash:</b> <a href=\"$REPO_URL/commit/${{ github.sha }}\">$(echo "${{ github.sha }}" | cut -c1-8)</a>"
@@ -1293,7 +1293,7 @@ jobs:
           echo "TIME_FORM=$TIME_FORM" >> $GITHUB_ENV
           TAG_HEAD="OPPO-OPlus-Realme-build"
           echo "TAG_HEAD=$TAG_HEAD" >> $GITHUB_ENV
-          KSU_TYPENAME="SukiSU Ultra"
+          KSU_TYPENAME="KageSU"
           echo "KSU_TYPENAME=$KSU_TYPENAME" >> $GITHUB_ENV
           
       - name: Create Release
@@ -1303,12 +1303,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 OnePlus 13 SukiSU Ultra SM8750 AOSP Clang
-          > ⚠️ **ROM Compatibility:** Built with **AOSP Clang** for **AOSP-based ROMs** only. To flash on **ColorOS / OxygenOS**, run the matching normal (non-AOSP) build workflow yourself (ZyCromerZ Clang builds are for ColorOS / OxygenOS only).
+          ### 📱 OnePlus 13 KageSU SM8750 Generic Kernel
+          > ⚠️ **ROM Compatibility:** Built with **ZyCromerZ Clang** for **ColorOS / OxygenOS** only. To flash on an **AOSP**-based ROM, run the matching `Build <manager> AOSP` workflow yourself (AOSP Clang builds are for AOSP ROMs only).
 
           - **Kernel Version:** ${{ env.FULL_VERSION }}
           - **Build Time:** ${{ env.TIME_FORM }}
-          - **KSU Branch:** SukiSU Ultra
+          - **KSU Branch:** KageSU
           - **SuSFS:** ${{ github.event.inputs.SUSFS }}
           - **NTSync:** ${{ github.event.inputs.ntsync_enable }}
           - **Droidspaces:** ${{ github.event.inputs.droidspaces_enable }}
