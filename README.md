@@ -138,7 +138,7 @@
 
 ### Toolchain
 - **Clang**: ZyCromerZ Clang 19.0.0git, Oryon-optimized (ColorOS/OxygenOS) — or AOSP Clang `clang-r563880c` for AOSP builds
-- **Linker**: LLD 19 with ThinLTO cache in RAM (`/dev/shm`)
+- **Linker**: LLD 19 with ThinLTO cache in `$GITHUB_WORKSPACE`
 - **CCache**: ECS-enhanced ccache with 10GB cache + aggressive sloppiness
 
 ### Compiler Flags
@@ -174,7 +174,7 @@
 ### Workflow Optimizations
 This CI pipeline includes:
 - 🚀 **Parallel patch application** for 20+ WildKernels patches
-- 💾 **RAM-based LTO cache** (`/dev/shm`) to avoid disk I/O bottlenecks
+- 💾 **RAM-based LTO cache** (`$GITHUB_WORKSPACE`) to avoid disk I/O bottlenecks
 - ⚡ **ThinLTO job limiting** (`--thinlto-jobs=$(nproc/2)`) to prevent CPU thrashing
 - 🔄 **Aggressive ccache** with kernel-specific sloppiness for maximal cache hits
 - 📦 **Pre-downloaded toolchain** via aria2c with 16 connections
@@ -196,7 +196,9 @@ This CI pipeline includes:
 | Device | Codename | Status |
 |--------|----------|--------|
 | **OnePlus 13** | `PJZ110` (CN) / `OP13` (Global) | ✅ Fully Supported |
-| **OnePlus 13T** | `PKX110` | ⚠️ Untested (should work, but not verified) |
+| **OnePlus 13T** | `PKX110` | ✅ Fully Supported |
+| **OnePlus Pad 3** | `OPD2415` | ✅ Fully Supported |
+| **OnePlus Pad 2 Pro** | `OPD2413` | ✅ Fully Supported | 
 
 > Requires unlocked bootloader + custom recovery (TWRP / KernelFlasher)
 
