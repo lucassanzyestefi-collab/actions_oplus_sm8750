@@ -463,21 +463,22 @@ jobs:
           cp ../kernel_patches/zram/001-lz4.patch ./
           cp ../kernel_patches/zram/002-zstd.patch ./
           
-          # Apply LZ4. We use || true because patch WILL exit with code 1 due to 
-          # skipping the binary diff, which is expected since we copied it manually above.
+          # Install patchutils
+          sudo apt-get install -y patchutils > /dev/null 2>&1
+          
+          # 1. Clean LZ4: Completely exclude the binary file from the patch
+          filterdiff -x '*lz4armv8.S' 001-lz4.patch > 001-lz4-clean.patch
+          mv 001-lz4-clean.patch 001-lz4.patch
+          
+          # 2. Clean ZSTD: Exclude the conflicting x86 portability macros
+          filterdiff -x '*portability_macros.h' 002-zstd.patch > 002-zstd-clean.patch
+          mv 002-zstd-clean.patch 002-zstd.patch
+          
           echo ">>> Applying LZ4 patch..."
-          patch -p1 -F 3 < 001-lz4.patch || true
+          patch -p1 -F 3 < 001-lz4.patch
           
-          # Apply ZSTD. GNU patch correctly handles /dev/null for creating new files.
-          # We use || true so the single rejected macro hunk doesn't halt the build.
           echo ">>> Applying ZSTD patch..."
-          patch -p1 -F 3 < 002-zstd.patch || true
-          
-          # Print the reject if it exists so we can inspect it in the Actions log
-          if [ -f "lib/zstd/common/portability_macros.h.rej" ]; then
-            echo "::warning::ZSTD patch had a minor conflict. This is usually harmless."
-            cat lib/zstd/common/portability_macros.h.rej
-          fi
+          patch -p1 -F 3 < 002-zstd.patch
           
           echo "Patching step completed."
 
