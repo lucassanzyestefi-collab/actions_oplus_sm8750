@@ -463,22 +463,30 @@ jobs:
           cp ../kernel_patches/zram/001-lz4.patch ./
           cp ../kernel_patches/zram/002-zstd.patch ./
           
-          # Install patchutils
+          # Install patchutils to clean the ZSTD patch
           sudo apt-get install -y patchutils > /dev/null 2>&1
           
-          # 1. Clean LZ4: Completely exclude the binary file from the patch
-          filterdiff -x '*lz4armv8.S' 001-lz4.patch > 001-lz4-clean.patch
-          mv 001-lz4-clean.patch 001-lz4.patch
-          
-          # 2. Clean ZSTD: Exclude the conflicting x86 portability macros
+          # Clean ZSTD: Exclude the conflicting x86 portability macros
           filterdiff -x '*portability_macros.h' 002-zstd.patch > 002-zstd-clean.patch
           mv 002-zstd-clean.patch 002-zstd.patch
           
           echo ">>> Applying LZ4 patch..."
-          patch -p1 -F 3 < 001-lz4.patch
+          # patch will exit 1 because it skips the binary diff. 
+          # We use || true to proceed, but check for .rej files to catch real errors.
+          patch -p1 -F 3 < 001-lz4.patch || true
+          if find . -name "*.rej" | grep -q .; then
+            echo "::error::LZ4 patch had rejected hunks!"
+            cat $(find . -name "*.rej")
+            exit 1
+          fi
           
           echo ">>> Applying ZSTD patch..."
-          patch -p1 -F 3 < 002-zstd.patch
+          patch -p1 -F 3 < 002-zstd.patch || true
+          if find . -name "*.rej" | grep -q .; then
+            echo "::error::ZSTD patch had rejected hunks!"
+            cat $(find . -name "*.rej")
+            exit 1
+          fi
           
           echo "Patching step completed."
 
